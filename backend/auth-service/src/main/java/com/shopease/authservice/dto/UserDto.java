@@ -1,0 +1,9 @@
+package com.shopease.authservice.dto;
+
+public record UserDto(
+        Long id,
+        String name,
+        String email,
+        String role
+) {
+}
