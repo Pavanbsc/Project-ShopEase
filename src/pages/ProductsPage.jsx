@@ -6,6 +6,21 @@ import ProductGrid from '../components/ProductGrid';
 import { useShopData } from '../context/ShopDataContext';
 import { addToCart, getLoggedInUser, getProducts } from '../services/api';
 
+const normalizeText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+const CATEGORY_ALIAS_MAP = {
+  mobiles: ['mobilephones', 'mobiles', 'mobile'],
+  mobilephones: ['mobilephones', 'mobiles', 'mobile'],
+  laptops: ['laptops', 'laptop'],
+  electronics: ['electronics', 'accessories', 'tablets'],
+  fashion: ['fashion', 'clothing', 'mensfashion', 'womensfashion', 'kidswear', 'footwear'],
+  'homekitchen': ['homeappliance', 'kitchenappliance', 'furniture', 'homedecor'],
+  sports: ['sportsshoes', 'sports'],
+};
+
 function ProductsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,19 +55,40 @@ function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (!categories.length || !requestedCategoryName) {
+    if (!categories.length) {
       return;
     }
 
-    const matchedCategory = categories.find(
-      (category) => category.name.toLowerCase() === requestedCategoryName.toLowerCase()
-    );
-
-    if (matchedCategory) {
-      setSelectedCategoryIds([matchedCategory.id]);
-      setSelectedCategoryName(matchedCategory.name);
-      setSelectedSubcategory(requestedSubcategory);
+    if (!requestedCategoryName) {
+      setSelectedCategoryName('');
+      setSelectedSubcategory('');
+      return;
     }
+
+    const requestedNormalized = normalizeText(requestedCategoryName);
+    const aliases = CATEGORY_ALIAS_MAP[requestedNormalized] || [requestedNormalized];
+
+    const matchedCategories = categories.filter((category) => {
+      const categoryNormalized = normalizeText(category.name);
+      return aliases.includes(categoryNormalized);
+    });
+
+    // Fallback to exact normalized match if alias map did not resolve anything.
+    const fallbackMatch = !matchedCategories.length
+      ? categories.filter((category) => normalizeText(category.name) === requestedNormalized)
+      : [];
+
+    const resolvedMatches = matchedCategories.length ? matchedCategories : fallbackMatch;
+
+    if (resolvedMatches.length) {
+      setSelectedCategoryIds(resolvedMatches.map((category) => category.id));
+      setSelectedCategoryName(requestedCategoryName);
+      setSelectedSubcategory(requestedSubcategory);
+      return;
+    }
+
+    setSelectedCategoryName(requestedCategoryName);
+    setSelectedSubcategory(requestedSubcategory);
   }, [categories, requestedCategoryName, requestedSubcategory]);
 
   const handleCategoryToggle = (categoryId) => {

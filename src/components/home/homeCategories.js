@@ -18,7 +18,7 @@ import {
 export const homeCategories = [
   {
     id: 'mobiles',
-    name: 'Mobiles',
+    name: 'Mobile Phones',
     description: 'Latest phones, accessories, and mobile essentials.',
     icon: FaMobileAlt,
     accent: '#2563eb',

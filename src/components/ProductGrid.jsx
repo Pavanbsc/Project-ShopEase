@@ -7,7 +7,11 @@ function ProductGrid({ products, onAddToCart, addingProductId }) {
 
   return (
     <div className="product-grid">
-      {products.map((product) => (
+      {products.map((product) => {
+        const seller = String(product.seller || '').trim();
+        const sellerLabel = seller || 'ShopEase Seller';
+
+        return (
         <article className="product-card" key={product.id}>
           <div className="product-card-top">
             <p className="product-category">
@@ -25,6 +29,7 @@ function ProductGrid({ products, onAddToCart, addingProductId }) {
           ) : null}
 
           <h3>{product.name}</h3>
+          <p className="product-category">Seller: {sellerLabel}</p>
           <p>{product.description || 'No description available.'}</p>
           <div className="price-row">
             <strong>{formatCurrencyINR(product.price)}</strong>
@@ -45,7 +50,8 @@ function ProductGrid({ products, onAddToCart, addingProductId }) {
             </button>
           ) : null}
         </article>
-      ))}
+        );
+      })}
     </div>
   );
 }

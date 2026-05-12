@@ -330,10 +330,21 @@ const normalizeProduct = (product) => {
   return {
     id: Number(product?.id),
     name: String(product?.name || '').trim(),
+    brand_name: product?.brand_name || null,
+    seller: String(product?.seller || '').trim() || 'ShopEase Seller',
+    seller_rating: product?.seller_rating ? Number(product?.seller_rating) : null,
+    seller_type: product?.seller_type || 'Standard',
+    seller_location: product?.seller_location || null,
     description: product?.description || '',
+    specifications: product?.specifications || {},
+    original_price: product?.original_price ? Number(product?.original_price) : null,
+    discount_percentage: product?.discount_percentage ? Number(product?.discount_percentage) : 0,
+    final_price: product?.final_price ? Number(product?.final_price) : Number(product?.price ?? 0),
     price: Number(product?.price ?? 0),
     stock: Number(product?.stock ?? 0),
+    stock_status: product?.stock_status || 'In Stock',
     image_url: product?.image_url || '',
+    subcategory_id: product?.subcategory_id || null,
     created_at: product?.created_at || product?.createdAt || null,
     category_id: categoryId,
     category_name: categoryName,
@@ -526,6 +537,7 @@ export const getProducts = async () => {
     console.error('Error fetching products:', error);
     return DEMO_PRODUCTS.map((product) => ({
       ...product,
+      seller: product.seller || 'ShopEase Seller',
       image_url: product.image_url || '',
       category_id: product.category?.id || null,
       category_name: product.category?.name || 'Uncategorized',
@@ -541,15 +553,42 @@ export const getProductsByCategory = async (categoryId) => {
 };
 
 export const createProduct = async (payload = {}) => {
+  const seller = String(payload.seller || '').trim();
+
+  if (!seller) {
+    throw createApiError('Seller is required', 400);
+  }
+
   const data = await requestProductsApi('/products', {
     method: 'POST',
     body: JSON.stringify({
       ...payload,
+      seller: String(payload.seller || '').trim(),
       stock: Number.isFinite(Number(payload.stock)) ? Number(payload.stock) : 0,
+      brand_name: payload.brand_name || undefined,
+      seller_rating: payload.seller_rating || undefined,
+      seller_type: payload.seller_type || 'Standard',
+      seller_location: payload.seller_location || undefined,
+      specifications: payload.specifications || {},
+      original_price: payload.original_price || undefined,
+      discount_percentage: payload.discount_percentage || 0,
+      final_price: payload.final_price || payload.price,
     }),
   });
 
   return data ? normalizeProduct(data) : null;
+};
+
+export const deleteProduct = async (productId) => {
+  if (!Number.isFinite(Number(productId))) {
+    throw createApiError('Product ID is required', 400);
+  }
+
+  await requestProductsApi(`/products/${productId}`, {
+    method: 'DELETE',
+  });
+
+  return true;
 };
 
 const normalizeCartItem = (item) => ({

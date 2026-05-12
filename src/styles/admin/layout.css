@@ -161,30 +161,73 @@
   margin-bottom: 24px;
 }
 
-.admin-product-form .form-group {
+.form-section {
+  border: none;
+  border-top: 2px solid #f0f0f0;
+  padding: 20px 0;
   margin-bottom: 16px;
 }
 
-.admin-product-form label {
+.form-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.form-section legend {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #232946;
+  margin-bottom: 12px;
+  padding: 0 6px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.form-group label {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
   color: #232946;
+  font-size: 14px;
 }
 
-.admin-product-form input,
-.admin-product-form select,
-.admin-product-form textarea {
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
+  font-family: inherit;
 }
 
-.admin-product-form textarea {
+.form-group textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-hint {
+  font-size: 13px;
+  color: #888;
+  margin-top: -8px;
+  margin-bottom: 12px;
 }
 
 .admin-submit-button {
@@ -230,6 +273,34 @@
   margin: 8px 0;
 }
 
+.product-discount {
+  color: #e63946;
+  font-weight: 600;
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.product-brand {
+  color: #666;
+  font-size: 13px;
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+.product-rating {
+  color: #f59e0b;
+  font-size: 13px;
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+.product-stock {
+  color: #10b981;
+  font-size: 13px;
+  margin: 4px 0;
+  font-weight: 500;
+}
+
 .product-seller,
 .product-category {
   color: #666;
@@ -241,6 +312,23 @@
   color: #555;
   font-size: 14px;
   margin-top: 8px;
+}
+
+.admin-delete-button {
+  background: #e63946;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 12px;
+  transition: opacity 0.2s ease;
+  width: 100%;
+}
+
+.admin-delete-button:hover {
+  opacity: 0.88;
 }
 
 /* Admin Categories Page */
