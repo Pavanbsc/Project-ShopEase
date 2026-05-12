@@ -1,0 +1,24 @@
+.admin-dashboard {
+  padding: 24px;
+}
+
+.admin-dashboard h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+}
+
+.admin-dashboard .overview-widgets {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.admin-dashboard .overview-widget {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 24px;
+  flex: 1;
+  min-width: 180px;
+  text-align: center;
+}

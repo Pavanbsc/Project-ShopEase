@@ -41,6 +41,15 @@ const FALLBACK_CATEGORIES = FALLBACK_CATEGORY_NAMES.map((name, index) => ({
   fallback: true,
 }));
 
+const normalizeCategory = (category, index = 0) => ({
+  id: Number(category?.id ?? index + 1),
+  name: String(category?.name || 'Uncategorized').trim(),
+  description:
+    category?.description ||
+    `Explore premium ${String(category?.name || 'uncategorized').toLowerCase()} deals curated for ShopEase shoppers.`,
+  image: category?.image || category?.imageUrl || category?.thumbnail || '',
+});
+
 export function ShopDataProvider({ children }) {
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -57,7 +66,7 @@ export function ShopDataProvider({ children }) {
       setCategoriesError('');
       const data = await getCategories();
       if (data.length) {
-        setCategories(data);
+        setCategories(data.map(normalizeCategory));
       } else {
         setCategories(FALLBACK_CATEGORIES);
       }
@@ -75,7 +84,7 @@ export function ShopDataProvider({ children }) {
       setIsLoadingCategories(true);
       setCategoriesError('');
       const data = await getCategories();
-      setCategories(data.length ? data : FALLBACK_CATEGORIES);
+      setCategories(data.length ? data.map(normalizeCategory) : FALLBACK_CATEGORIES);
       hasLoadedCategories.current = true;
     } catch (error) {
       setCategories(FALLBACK_CATEGORIES);

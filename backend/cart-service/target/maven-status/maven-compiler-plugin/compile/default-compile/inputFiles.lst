@@ -1,0 +1,8 @@
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\CartServiceApplication.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\config\SecurityConfig.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\controller\CartController.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\entity\Cart.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\entity\CartItem.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\repository\CartItemRepository.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\repository\CartRepository.java
+C:\Users\meghana.goudb\Project-ShopEase\backend\cart-service\src\main\java\com\shopease\cart\service\CartService.java

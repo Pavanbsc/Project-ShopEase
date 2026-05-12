@@ -1,0 +1,4 @@
+/* General admin styles */
+.admin-layout, .sidebar, .main-content, .top-navbar {
+  box-sizing: border-box;
+}

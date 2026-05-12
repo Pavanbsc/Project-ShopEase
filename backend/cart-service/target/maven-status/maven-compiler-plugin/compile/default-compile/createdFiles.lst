@@ -1,0 +1,8 @@
+com\shopease\cart\CartServiceApplication.class
+com\shopease\cart\entity\CartItem.class
+com\shopease\cart\config\SecurityConfig.class
+com\shopease\cart\controller\CartController.class
+com\shopease\cart\service\CartService.class
+com\shopease\cart\entity\Cart.class
+com\shopease\cart\repository\CartRepository.class
+com\shopease\cart\repository\CartItemRepository.class

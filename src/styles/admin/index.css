@@ -1,0 +1,10 @@
+@import './layout.css';
+@import './sidebar.css';
+@import './topnavbar.css';
+@import './dashboard.css';
+@import './products.css';
+@import './categories.css';
+@import './orders.css';
+@import './users.css';
+@import './inventory.css';
+@import './admin.css';

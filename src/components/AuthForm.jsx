@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaApple,
@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { loginUser, registerUser } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -33,6 +34,7 @@ const initialSignupState = {
 function AuthForm({ initialMode = 'login' }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setUser } = useContext(AuthContext);
   const [mode, setMode] = useState(initialMode);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
@@ -127,9 +129,15 @@ function AuthForm({ initialMode = 'login' }) {
         password: loginData.password,
       });
 
+      // Update AuthContext with user data
+      if (response?.user) {
+        setUser(response.user);
+      }
+
       const role = response?.role || response?.user?.role || 'USER';
       toast.success('Login successful! Welcome back to ShopEase.');
-      navigate(role === 'ADMIN' ? '/admin-dashboard' : '/home');
+      setLoginData(initialLoginState);
+      navigate(role === 'ADMIN' ? '/admin/dashboard' : '/home');
     } catch (error) {
       const message =
         error?.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -155,10 +163,15 @@ function AuthForm({ initialMode = 'login' }) {
         role: signupData.role,
       });
 
+      // Update AuthContext with user data
+      if (response?.user) {
+        setUser(response.user);
+      }
+
       const role = response?.role || response?.user?.role || signupData.role || 'USER';
       toast.success(response?.message || 'Account ready. You are now signed in.');
       setSignupData(initialSignupState);
-      navigate(role === 'ADMIN' ? '/admin-dashboard' : '/home');
+      navigate(role === 'ADMIN' ? '/admin/dashboard' : '/home');
     } catch (error) {
       const message =
         error?.response?.data?.message || 'Registration failed. Please try again.';

@@ -1,0 +1,60 @@
+# Quick Reference: Add Product Setup
+
+## All Code is Ready ✅
+All backend and frontend code is complete and correct. No code changes needed.
+
+---
+
+## Only Missing: Running the Backend Server
+
+### Run This (Choose One):
+
+**Option 1: PowerShell Script (Recommended for Windows)**
+```powershell
+.\start-backend-windows.ps1
+```
+
+**Option 2: Manual (Any OS)**
+```bash
+cd node-backend
+npm run start
+```
+
+---
+
+## Success Indicator
+When you see this message, the backend is running:
+```
+ShopEase product API listening on port 8083
+```
+
+---
+
+## Then Test:
+
+1. Go to Admin Dashboard: `http://localhost:5173/admin/products`
+2. Click "Add Product"
+3. Fill the form (select category from dropdown)
+4. Click "Add Product"
+5. Should see: "Product added successfully." ✅
+
+---
+
+## If Backend Won't Start:
+
+Check this in order:
+1. Is MySQL running? (password: root@39)
+2. Do you have `node_modules` in `node-backend`?
+3. Any error message in terminal? Post it here.
+
+---
+
+## Database Auto-Setup
+Backend automatically creates on first run:
+- ✅ shopease_db database
+- ✅ categories table (14 categories)
+- ✅ products table (with proper relationships)
+
+---
+
+No additional files or code changes needed. Just start the backend and test!

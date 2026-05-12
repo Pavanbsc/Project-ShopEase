@@ -1,0 +1,8 @@
+com\shopease\order\repository\OrderItemRepository.class
+com\shopease\order\controller\OrderController.class
+com\shopease\order\service\OrderService.class
+com\shopease\order\entity\OrderItem.class
+com\shopease\order\OrderServiceApplication.class
+com\shopease\order\entity\Order.class
+com\shopease\order\repository\OrderRepository.class
+com\shopease\order\config\SecurityConfig.class

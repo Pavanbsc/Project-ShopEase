@@ -35,8 +35,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception exception) {
+        exception.printStackTrace();
         Map<String, String> payload = new HashMap<>();
-        payload.put("message", "Unexpected error occurred");
+        payload.put("message", exception.getMessage() != null ? exception.getMessage() : "Unexpected error occurred");
+        payload.put("error", exception.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(payload);
     }
 }

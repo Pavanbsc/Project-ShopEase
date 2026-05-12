@@ -1,0 +1,15 @@
+com\shopease\product\config\SecurityConfig.class
+com\shopease\product\service\ProductService.class
+com\shopease\product\controller\ProductController.class
+com\shopease\product\entity\ProductEntity.class
+com\shopease\product\repository\ProductRepository.class
+com\shopease\product\repository\CategoryRepository.class
+com\shopease\product\controller\CategoryController$CategoryRequest.class
+com\shopease\product\controller\CategoryController.class
+com\shopease\product\controller\ProductController$ProductRequest.class
+com\shopease\product\ProductServiceApplication.class
+com\shopease\product\service\CategoryService.class
+com\shopease\product\controller\ProductController$CategoryRequest.class
+com\shopease\product\entity\CategoryEntity.class
+com\shopease\product\entity\Category.class
+com\shopease\product\entity\Product.class

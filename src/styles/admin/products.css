@@ -1,0 +1,15 @@
+.admin-products {
+  padding: 24px;
+}
+
+.admin-products h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+}
+
+.admin-products .product-list {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 24px;
+}

@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import CategoryGrid from '../components/CategoryGrid';
 import ProductGrid from '../components/ProductGrid';
 import TopNavbar from '../components/TopNavbar';
 import { useShopData } from '../context/ShopDataContext';
-import { getProductsByCategory } from '../services/api';
+import { addToCart, getLoggedInUser, getProductsByCategory } from '../services/api';
 
 function CategoryPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { categoryById } = useShopData();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addingProductId, setAddingProductId] = useState(null);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -31,6 +34,28 @@ function CategoryPage() {
   }, [id]);
 
   const category = useMemo(() => categoryById[String(id)], [categoryById, id]);
+
+  const handleAddToCart = async (product) => {
+    const user = getLoggedInUser();
+
+    if (!user?.id) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setAddingProductId(product.id);
+      const cart = await addToCart(user.id, { productId: product.id, quantity: 1 });
+      const cartCount = (cart.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      window.localStorage.setItem('shopease_cart_count', String(cartCount));
+      window.dispatchEvent(new Event('cartUpdated'));
+      toast.success(`${product.name} added to cart.`);
+    } catch (apiError) {
+      toast.error(apiError?.response?.data?.message || 'Unable to add item to cart.');
+    } finally {
+      setAddingProductId(null);
+    }
+  };
 
   return (
     <div className="se-dashboard-page">
@@ -54,7 +79,13 @@ function CategoryPage() {
         <section className="se-home-section">
           {isLoading ? <div className="loading-state">Loading products...</div> : null}
           {!isLoading && error ? <div className="empty-state">{error}</div> : null}
-          {!isLoading && !error ? <ProductGrid products={products} /> : null}
+          {!isLoading && !error ? (
+            <ProductGrid
+              products={products}
+              onAddToCart={handleAddToCart}
+              addingProductId={addingProductId}
+            />
+          ) : null}
         </section>
       </main>
     </div>

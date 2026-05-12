@@ -1,0 +1,6 @@
+com\shopease\inventory\service\InventoryService.class
+com\shopease\inventory\config\SecurityConfig.class
+com\shopease\inventory\InventoryServiceApplication.class
+com\shopease\inventory\repository\InventoryRepository.class
+com\shopease\inventory\controller\InventoryController.class
+com\shopease\inventory\entity\Inventory.class
