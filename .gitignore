@@ -1,6 +1,30 @@
-node_modules
-dist
-.vscode
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
+
+# Logs
+*.log
+*.err
+
+# Environment
 .env
-.env.local
+node_modules/
+dist/
+
+# OS
+Thumbs.db
+
+# Compiled files
+*.o
+*.pyc

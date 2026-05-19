@@ -4,10 +4,6 @@ import helpImage from '../assets/help.png';
 import '../styles/chatbot.css';
 
 const POS_KEY = 'se_chatbot_pos';
-const FAB_SIZE = 64;
-const PANEL_WIDTH = 380;
-const PANEL_HEIGHT = 600;
-const EDGE_GAP = 12;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -33,6 +29,63 @@ const Chatbot = () => {
       return null;
     }
   });
+
+  const [panelPos, setPanelPos] = useState({ top: 0, left: 0 });
+
+  // Calculate optimal panel position based on viewport
+  useEffect(() => {
+    if (!open) return;
+
+    const calculatePanelPosition = () => {
+      const padding = 24;
+      const fabSize = 64;
+      const isMobile = window.innerWidth <= 480;
+
+      // Dynamic panel dimensions based on viewport
+      let panelWidth = isMobile ? Math.min(380, window.innerWidth - padding) : 380;
+      let panelHeight = isMobile ? Math.min(600, window.innerHeight - 80) : 600;
+
+      // FAB position
+      const fabX = pos?.x ?? (window.innerWidth - padding - fabSize);
+      const fabY = pos?.y ?? (window.innerHeight - padding - fabSize);
+
+      let panelLeft = fabX - panelWidth + fabSize;
+      let panelTop = fabY - panelHeight;
+
+      // On mobile devices, center the panel horizontally
+      if (isMobile) {
+        panelLeft = (window.innerWidth - panelWidth) / 2;
+        panelTop = Math.max(padding, (window.innerHeight - panelHeight) / 2);
+      } else {
+        // Adjust if panel goes off-screen
+        // Left boundary check
+        if (panelLeft < padding) {
+          panelLeft = padding;
+        }
+
+        // Right boundary check
+        if (panelLeft + panelWidth > window.innerWidth - padding) {
+          panelLeft = window.innerWidth - panelWidth - padding;
+        }
+
+        // Top boundary check
+        if (panelTop < padding) {
+          panelTop = padding;
+        }
+
+        // Bottom boundary check
+        if (panelTop + panelHeight > window.innerHeight - padding) {
+          panelTop = window.innerHeight - panelHeight - padding;
+        }
+      }
+
+      setPanelPos({ top: panelTop, left: panelLeft });
+    };
+
+    calculatePanelPosition();
+    window.addEventListener('resize', calculatePanelPosition);
+    return () => window.removeEventListener('resize', calculatePanelPosition);
+  }, [open, pos]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -167,42 +220,6 @@ const Chatbot = () => {
     ? { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto', bottom: 'auto' }
     : undefined;
 
-  const panelStyle = (() => {
-    const anchor = pos ?? {
-      x: window.innerWidth - 24 - FAB_SIZE,
-      y: window.innerHeight - 24 - FAB_SIZE,
-    };
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const minX = EDGE_GAP;
-    const maxX = viewportWidth - PANEL_WIDTH - EDGE_GAP;
-    const minY = EDGE_GAP;
-    const maxY = viewportHeight - PANEL_HEIGHT - EDGE_GAP;
-
-    let left = anchor.x;
-    let top = anchor.y - PANEL_HEIGHT - EDGE_GAP;
-
-    if (top < minY) {
-      top = anchor.y + FAB_SIZE + EDGE_GAP;
-    }
-
-    if (top > maxY) {
-      top = Math.min(anchor.y, maxY);
-    }
-
-    left = clamp(left, minX, Math.max(minX, maxX));
-    top = clamp(top, minY, Math.max(minY, maxY));
-
-    return {
-      left: `${left}px`,
-      top: `${top}px`,
-      right: 'auto',
-      bottom: 'auto',
-      transform: 'none',
-    };
-  })();
-
   return (
     <div className="se-chatbot-root" style={fabStyle}>
       {!open && showGreeting && (
@@ -228,7 +245,7 @@ const Chatbot = () => {
       )}
 
       {open && (
-        <div className="se-chatbot-panel se-panel-open" style={panelStyle}>
+        <div className="se-chatbot-panel se-panel-open" style={{ top: `${panelPos.top}px`, left: `${panelPos.left}px` }}>
           <div className="se-chatbot-header">
             <div className="se-header-content">
               <div className="se-header-icon">

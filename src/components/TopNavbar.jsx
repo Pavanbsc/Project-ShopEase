@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  FaBell,
   FaChevronDown,
+  FaCrown,
   FaGift,
   FaHeadset,
   FaHeart,
@@ -10,17 +12,20 @@ import {
   FaShoppingCart,
   FaStar,
   FaTags,
+  FaTimes,
   FaUserCircle,
 } from 'react-icons/fa';
-import { logoutUser } from '../services/api';
+import { getCartItems, getLoggedInUser, logoutUser } from '../services/api';
+import Support from './Support';
+import GiftCard from './GiftCard';
+import Membership from './Membership';
+import Rewards from './Rewards';
 
 const quickItems = [
   { label: 'Wishlist', icon: FaHeart },
   { label: 'Rewards', icon: FaStar },
   { label: '24x7 Support', icon: FaHeadset },
   { label: 'Gift Card', icon: FaGift },
-  { label: 'Offers', icon: FaPercent },
-  { label: 'Deals', icon: FaTags },
 ];
 
 function TopNavbar() {
@@ -33,14 +38,42 @@ function TopNavbar() {
   const [navShellHeight, setNavShellHeight] = useState(0);
   const [query, setQuery] = useState('');
   const [cartCount, setCartCount] = useState(0);
+  const [isMembershipOpen, setIsMembershipOpen] = useState(false);
+  const [isRewardsOpen, setIsRewardsOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isGiftCardOpen, setIsGiftCardOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   const menuRef = useRef(null);
   const navShellRef = useRef(null);
 
   useEffect(() => {
-    const storedCount = Number(window.localStorage.getItem('shopease_cart_count') || 0);
-    if (!Number.isNaN(storedCount)) {
-      setCartCount(storedCount);
-    }
+    const syncCartCount = async () => {
+      const user = getLoggedInUser();
+      if (!user?.id) {
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        const items = await getCartItems();
+        const count = items.reduce((accumulator, item) => accumulator + Number(item.quantity || 0), 0);
+        setCartCount(count);
+      } catch {
+        setCartCount(0);
+      }
+    };
+
+    syncCartCount();
+    window.addEventListener('storage', syncCartCount);
+    window.addEventListener('cartUpdated', syncCartCount);
+    window.addEventListener('authStateChanged', syncCartCount);
+
+    return () => {
+      window.removeEventListener('storage', syncCartCount);
+      window.removeEventListener('cartUpdated', syncCartCount);
+      window.removeEventListener('authStateChanged', syncCartCount);
+    };
   }, []);
 
   useEffect(() => {
@@ -93,6 +126,31 @@ function TopNavbar() {
     navigate('/login');
   };
 
+  const handleQuickItemClick = (label) => {
+    if (label === 'Wishlist') {
+      navigate('/wishlist');
+      return;
+    }
+
+    if (label === 'Rewards') {
+      setIsSupportOpen(false);
+      setIsGiftCardOpen(false);
+      setIsRewardsOpen(true);
+    } else if (label === '24x7 Support') {
+      setIsRewardsOpen(false);
+      setIsGiftCardOpen(false);
+      setIsSupportOpen(true);
+    } else if (label === 'Gift Card') {
+      setIsRewardsOpen(false);
+      setIsSupportOpen(false);
+      setIsGiftCardOpen(true);
+    }
+  };
+
+  const handlePremiumClick = () => {
+    setIsMembershipOpen(true);
+  };
+
   return (
     <>
       <header className="se-navbar-wrap">
@@ -130,6 +188,18 @@ function TopNavbar() {
             </form>
 
             <div className="se-nav-right">
+              <button
+                type="button"
+                className="se-notif-btn"
+                onClick={() => setIsNotifOpen((previous) => !previous)}
+                aria-label="Notifications"
+              >
+                <span className="se-action-icon" aria-hidden="true">
+                  <FaBell />
+                </span>
+                {notifCount > 0 && <strong className="se-notif-badge">{notifCount}</strong>}
+              </button>
+
               <Link to="/cart" className="se-cart-btn" aria-label="Open cart">
                 <span className="se-action-icon" aria-hidden="true">
                   <FaShoppingCart />
@@ -158,9 +228,9 @@ function TopNavbar() {
                     <Link to="/profile" role="menuitem" onClick={() => setIsMenuOpen(false)}>
                       My Profile
                     </Link>
-                    <button type="button" role="menuitem" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/orders" role="menuitem" onClick={() => setIsMenuOpen(false)}>
                       Orders
-                    </button>
+                    </Link>
                     <button type="button" role="menuitem" onClick={handleLogout}>
                       Logout
                     </button>
@@ -176,16 +246,48 @@ function TopNavbar() {
         <div className="se-quick-row">
           <div className="se-quick-strip" aria-label="ShopEase quick actions">
             {quickItems.map(({ label, icon: Icon }) => (
-              <button key={label} type="button" className="se-quick-chip">
+              <button
+                key={label}
+                type="button"
+                className="se-quick-chip"
+                onClick={() => handleQuickItemClick(label)}
+              >
                 <span className="se-quick-icon" aria-hidden="true">
                   <Icon />
                 </span>
                 <span>{label}</span>
               </button>
             ))}
+            <button
+              type="button"
+              className="se-premium-chip"
+              onClick={handlePremiumClick}
+              aria-label="ShopEase Premium membership"
+            >
+              <span className="se-premium-icon" aria-hidden="true">
+                <FaCrown />
+              </span>
+              <span className="se-premium-label">ShopEase Premium</span>
+            </button>
           </div>
         </div>
       ) : null}
+
+      {isMembershipOpen && (
+        <Membership isOpen={isMembershipOpen} onClose={() => setIsMembershipOpen(false)} />
+      )}
+
+      {isRewardsOpen && (
+        <Rewards isOpen={isRewardsOpen} onClose={() => setIsRewardsOpen(false)} />
+      )}
+
+      {isSupportOpen && (
+        <Support onClose={() => setIsSupportOpen(false)} />
+      )}
+
+      {isGiftCardOpen && (
+        <GiftCard isOpen={isGiftCardOpen} onClose={() => setIsGiftCardOpen(false)} />
+      )}
     </>
   );
 }

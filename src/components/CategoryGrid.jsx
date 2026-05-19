@@ -129,7 +129,16 @@ function CategoryGrid({ activeCategoryId = null }) {
               type="button"
               key={`${category.id}-${index}`}
               className={`se-category-tile se-category-tile--${variant} ${isActive ? 'active' : ''}`}
-              onClick={() => navigate(`/category/${category.id}`)}
+              onClick={() => {
+                sessionStorage.setItem('shopease_home_scrollY', String(window.scrollY || 0));
+                // If category defines subcategories, open the subcategory page by slug
+                if (Array.isArray(category.subcategories) && category.subcategories.length) {
+                  navigate(`/category/${category.slug}`);
+                } else {
+                  // Otherwise navigate directly to products filtered by this category id
+                  navigate(`/products?categoryId=${category.id}`);
+                }
+              }}
               style={{
                 '--category-start': palette.start,
                 '--category-end': palette.end,

@@ -1,60 +1,69 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import CategoryGrid from '../components/CategoryGrid';
-import ProductGrid from '../components/ProductGrid';
-import TopNavbar from '../components/TopNavbar';
+
+import React, { useEffect, useMemo } from 'react';
+import { FaHome, FaArrowLeft } from 'react-icons/fa';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useShopData } from '../context/ShopDataContext';
-import { getProductsByCategory } from '../services/api';
+import SubcategoryGrid from '../components/SubcategoryGrid';
 
 function CategoryPage() {
-  const { id } = useParams();
-  const { categoryById } = useShopData();
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { categorySlug, subcategorySlug } = useParams();
+  const navigate = useNavigate();
+  const { categoryBySlug } = useShopData();
 
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-        const categoryProducts = await getProductsByCategory(id);
-        setProducts(categoryProducts);
-      } catch (apiError) {
-        setError(apiError?.response?.data?.message || 'Failed to load category products.');
-      } finally {
-        setIsLoading(false);
+    // If subcategory segment is present, redirect to filtered products
+    if (subcategorySlug && categorySlug) {
+      const category = categoryBySlug?.[categorySlug];
+      if (category) {
+        navigate(`/products?categoryId=${category.id}&subcategory=${subcategorySlug}`);
+      } else {
+        navigate('/products');
       }
-    };
+    }
+  }, [subcategorySlug, categorySlug, categoryBySlug, navigate]);
 
-    loadProducts();
-  }, [id]);
+  const category = categoryBySlug?.[categorySlug];
+  const breadcrumbLabel = useMemo(() => category?.name || 'Category', [category]);
 
-  const category = useMemo(() => categoryById[String(id)], [categoryById, id]);
+  if (!categorySlug) {
+    return <div className="empty-state">Category not specified.</div>;
+  }
+
+  if (!category) {
+    return <div className="empty-state">Category not found.</div>;
+  }
+
+  // If no subcategories, go straight to products page filtered by category
+  if (!Array.isArray(category.subcategories) || !category.subcategories.length) {
+    navigate(`/products?categoryId=${category.id}`);
+    return null;
+  }
 
   return (
-    <div className="se-dashboard-page">
-      <TopNavbar />
-
-      <main className="se-main-content">
-        <header className="se-section-head se-title-row">
-          <div>
-          <h1>{category?.name || `Category #${id}`}</h1>
-          <p>{category?.description || 'Browse products within this category.'}</p>
+    <div className="se-minimal-page">
+      <header className="se-minimal-header-bar">
+        <nav className="se-minimal-header-content">
+          <button type="button" className="se-minimal-header-home" onClick={() => navigate('/home')}>
+            <FaHome />
+          </button>
+          <span className="se-minimal-header-title">{breadcrumbLabel}</span>
+          <button type="button" className="se-minimal-header-back" onClick={() => navigate('/home')}>
+            <FaArrowLeft />
+            <span>Back</span>
+          </button>
+        </nav>
+      </header>
+      <main className="se-minimal-container">
+        <section className="se-minimal-content">
+          <div className="se-minimal-heading">
+            <h1>{category.name}</h1>
+            <p>{category.description}</p>
+            <a href="#subcategories" className="se-minimal-cta-link">View All</a>
           </div>
-          <Link to="/home" className="status-link">
-            Back to Home
-          </Link>
-        </header>
 
-        <section className="se-home-section">
-          <CategoryGrid activeCategoryId={id} />
-        </section>
-
-        <section className="se-home-section">
-          {isLoading ? <div className="loading-state">Loading products...</div> : null}
-          {!isLoading && error ? <div className="empty-state">{error}</div> : null}
-          {!isLoading && !error ? <ProductGrid products={products} /> : null}
+          <div id="subcategories">
+            <SubcategoryGrid category={category} />
+          </div>
         </section>
       </main>
     </div>

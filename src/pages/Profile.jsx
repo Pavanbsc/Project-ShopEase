@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaUser,
@@ -54,14 +54,20 @@ const Profile = () => {
     confirmPassword: '',
   });
   const [addresses, setAddresses] = useState([]);
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const [newAddress, setNewAddress] = useState({
     street: '',
     city: '',
     state: '',
     pincode: '',
     phone: '',
+    alternatePhone: '',
+    landmark: '',
   });
   const [showAddAddressForm, setShowAddAddressForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
 
   const persistUserNameInSession = (name) => {
     try {
@@ -97,6 +103,7 @@ const Profile = () => {
         setProfileData(mappedProfile);
         setFormData(mappedProfile);
         setAddresses(Array.isArray(data?.addresses) ? data.addresses : []);
+        setImagePreview(data?.profileImage || null);
         if (mappedProfile.name) {
           persistUserNameInSession(mappedProfile.name);
         }
@@ -137,6 +144,7 @@ const Profile = () => {
         dateOfBirth: formData.dateOfBirth,
         gender: formData.gender,
         address: formData.address,
+        profileImage: imagePreview,
         addresses,
       };
       const saved = await updateUserProfile(loggedInUser.id, payload);
@@ -152,6 +160,7 @@ const Profile = () => {
       setProfileData(updatedProfile);
       setFormData(updatedProfile);
       setAddresses(Array.isArray(saved?.addresses) ? saved.addresses : []);
+      setImagePreview(saved?.profileImage || imagePreview || null);
       setIsEditingProfile(false);
       persistUserNameInSession(updatedProfile.name);
       toast.success('Profile updated successfully!');
@@ -226,8 +235,13 @@ const Profile = () => {
       return;
     }
 
+    const nextAddresses = [...addresses, { ...newAddress, id: Date.now() }];
+    // optimistic UI update
+    setAddresses(nextAddresses);
+    setNewAddress({ street: '', city: '', state: '', pincode: '', phone: '', alternatePhone: '', landmark: '' });
+    setShowAddAddressForm(false);
+
     try {
-      const nextAddresses = [...addresses, { ...newAddress, id: Date.now() }];
       const saved = await updateUserProfile(loggedInUser.id, {
         name: profileData.name,
         phone: profileData.phone,
@@ -237,11 +251,12 @@ const Profile = () => {
         addresses: nextAddresses,
       });
 
+      // replace with authoritative server data when available
       setAddresses(Array.isArray(saved?.addresses) ? saved.addresses : nextAddresses);
-      setNewAddress({ street: '', city: '', state: '', pincode: '', phone: '' });
-      setShowAddAddressForm(false);
       toast.success('Address added successfully!');
     } catch (error) {
+      // revert optimistic update on failure
+      setAddresses(addresses);
       const message = error?.response?.data?.message || 'Failed to save address';
       toast.error(message);
     }
@@ -272,6 +287,122 @@ const Profile = () => {
     }
   };
 
+  const handleEditAddress = (addressId) => {
+    const addressToEdit = addresses.find((addr) => addr.id === addressId);
+    if (addressToEdit) {
+      setNewAddress(addressToEdit);
+      setEditingAddressId(addressId);
+      setShowAddAddressForm(true);
+    }
+  };
+
+  const handleUpdateAddress = async () => {
+    if (!loggedInUser?.id) {
+      toast.error('User session not found. Please login again.');
+      return;
+    }
+
+    if (!newAddress.street || !newAddress.city || !newAddress.state || !newAddress.pincode || !newAddress.phone) {
+      toast.error('Please fill in all required address fields');
+      return;
+    }
+    if (!newAddress.pincode.match(/^\d{6}$/)) {
+      toast.error('Please enter a valid 6-digit pincode');
+      return;
+    }
+    if (!newAddress.phone.match(/^\d{10}$/)) {
+      toast.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    const prev = addresses;
+    const nextAddresses = addresses.map((addr) =>
+      addr.id === editingAddressId ? { ...newAddress, id: editingAddressId } : addr
+    );
+
+    // optimistic update
+    setAddresses(nextAddresses);
+    setNewAddress({ street: '', city: '', state: '', pincode: '', phone: '', alternatePhone: '', landmark: '' });
+    setEditingAddressId(null);
+    setShowAddAddressForm(false);
+
+    try {
+      const saved = await updateUserProfile(loggedInUser.id, {
+        name: profileData.name,
+        phone: profileData.phone,
+        dateOfBirth: profileData.dateOfBirth,
+        gender: profileData.gender,
+        address: profileData.address,
+        addresses: nextAddresses,
+      });
+
+      setAddresses(Array.isArray(saved?.addresses) ? saved.addresses : nextAddresses);
+      toast.success('Address updated successfully!');
+    } catch (error) {
+      // revert on failure
+      setAddresses(prev);
+      const message = error?.response?.data?.message || 'Failed to update address';
+      toast.error(message);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const result = String(reader.result || '');
+      const approxSizeInMb = result.length / (1024 * 1024);
+
+      if (approxSizeInMb > 4.5) {
+        toast.error('Image is too large to store locally. Please choose a smaller image.');
+        return;
+      }
+
+      setImagePreview(result);
+      setProfileImage(file);
+
+      if (loggedInUser?.id) {
+        try {
+          await updateUserProfile(loggedInUser.id, {
+            name: formData.name,
+            phone: formData.phone,
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            address: formData.address,
+            profileImage: result,
+            addresses,
+          });
+        } catch (error) {
+          const message = error?.response?.data?.message || 'Failed to save profile image';
+          toast.error(message);
+          return;
+        }
+      }
+
+      toast.success('Profile image saved successfully!');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="se-profile-page">
       <TopNavbar />
@@ -281,12 +412,20 @@ const Profile = () => {
         <div className="se-profile-header">
           <div className="se-profile-header-content">
             <div className="se-profile-avatar-section">
-              <div className="se-profile-avatar-large">
-                <FaUser />
+              <div className="se-profile-avatar-large" style={{ backgroundImage: imagePreview ? `url(${imagePreview})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                {!imagePreview && <FaUser />}
               </div>
-              <button className="se-avatar-upload-btn" title="Upload photo">
+              <button className="se-avatar-upload-btn" title="Upload photo" onClick={handleUploadClick}>
                 <FaCamera />
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+                aria-label="Upload profile image"
+              />
             </div>
             <div className="se-profile-header-info">
               <h1>{profileData.name}</h1>
@@ -518,17 +657,44 @@ const Profile = () => {
                           placeholder="Enter 10-digit phone number"
                         />
                       </div>
+
+                      <div className="se-form-group">
+                        <label>
+                          <FaPhone /> Alternate Mobile No.
+                        </label>
+                        <input
+                          type="tel"
+                          name="alternatePhone"
+                          value={newAddress.alternatePhone}
+                          onChange={handleAddAddressChange}
+                          placeholder="Enter 10-digit alternate phone (optional)"
+                        />
+                      </div>
+
+                      <div className="se-form-group se-full-width">
+                        <label>
+                          <FaMapMarkerAlt /> Landmark
+                        </label>
+                        <input
+                          type="text"
+                          name="landmark"
+                          value={newAddress.landmark}
+                          onChange={handleAddAddressChange}
+                          placeholder="E.g., Near Park, Behind School (optional)"
+                        />
+                      </div>
                     </div>
 
                     <div className="se-form-actions">
-                      <button className="se-btn-primary" onClick={handleAddAddress}>
-                        <FaCheck /> Save Address
+                      <button className="se-btn-primary" onClick={editingAddressId ? handleUpdateAddress : handleAddAddress}>
+                        <FaCheck /> {editingAddressId ? 'Update Address' : 'Save Address'}
                       </button>
                       <button
                         className="se-btn-secondary"
                         onClick={() => {
                           setShowAddAddressForm(false);
-                          setNewAddress({ street: '', city: '', state: '', pincode: '', phone: '' });
+                          setNewAddress({ street: '', city: '', state: '', pincode: '', phone: '', alternatePhone: '', landmark: '' });
+                          setEditingAddressId(null);
                         }}
                       >
                         <FaTimes /> Cancel
@@ -539,20 +705,35 @@ const Profile = () => {
                   <div className="se-addresses-list">
                     {addresses.map((addr) => (
                       <div key={addr.id} className="se-address-card">
-                        <div className="se-address-content">
-                          <p className="se-address-street">{addr.street}</p>
-                          <p className="se-address-city">{addr.city}, {addr.state} - {addr.pincode}</p>
-                          <p className="se-address-phone">
-                            <FaPhone /> {addr.phone}
-                          </p>
+                          <div className="se-address-content">
+                            <p className="se-address-street"><strong>{addr.street}</strong></p>
+                            <p className="se-address-city">{addr.city}, {addr.state} - {addr.pincode}</p>
+                            <p className="se-address-phone">
+                              <FaPhone /> {addr.phone || 'Not added'}
+                            </p>
+                            <p className="se-address-phone">
+                              <FaPhone /> Alt: {addr.alternatePhone || 'Not added'}
+                            </p>
+                            <p className="se-address-landmark">
+                              <FaMapMarkerAlt /> {addr.landmark || 'Not added'}
+                            </p>
+                          </div>
+                        <div className="se-address-actions">
+                          <button
+                            className="se-btn-primary"
+                            onClick={() => handleEditAddress(addr.id)}
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem' }}
+                          >
+                            <FaEdit /> Edit
+                          </button>
+                          <button
+                            className="se-btn-danger"
+                            onClick={() => handleRemoveAddress(addr.id)}
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem' }}
+                          >
+                            <FaTimes /> Remove
+                          </button>
                         </div>
-                        <button
-                          className="se-btn-danger"
-                          onClick={() => handleRemoveAddress(addr.id)}
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem' }}
-                        >
-                          <FaTimes /> Remove
-                        </button>
                       </div>
                     ))}
                   </div>

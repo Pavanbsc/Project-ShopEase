@@ -25,13 +25,13 @@ function CategoryNav() {
           <span className="category-pill loading">Loading categories...</span>
         ) : (
           categories.map((category) => {
-            const isActive = location.pathname === `/category/${category.id}`;
+            const target = Array.isArray(category?.subcategories) && category.subcategories.length ? `/category/${category.slug}` : `/products?categoryId=${category.id}`;
+            const isActive =
+              location.pathname.startsWith(`/category/${category.slug}`) ||
+              (location.pathname === '/products' && new URLSearchParams(location.search).get('categoryId') === String(category.id));
+
             return (
-              <Link
-                key={category.id}
-                to={`/category/${category.id}`}
-                className={`category-pill ${isActive ? 'active' : ''}`}
-              >
+              <Link key={category.id} to={target} className={`category-pill ${isActive ? 'active' : ''}`}>
                 {category.name}
               </Link>
             );

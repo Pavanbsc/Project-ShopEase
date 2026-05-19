@@ -4,39 +4,34 @@ import { getCategories } from '../services/api';
 const ShopDataContext = createContext(null);
 
 const FALLBACK_CATEGORY_NAMES = [
-  'Electronics',
-  'Mobile Phones',
+  'Mobiles',
   'Laptops',
-  'Tablets',
-  'Accessories',
-  'Clothing',
-  "Men's Fashion",
-  "Women's Fashion",
-  'Kids Wear',
-  'Footwear',
-  'Sports Shoes',
-  'Home Appliances',
-  'Kitchen Appliances',
-  'Furniture',
-  'Home Decor',
-  'Books',
-  'Stationery',
-  'Beauty & Personal Care',
-  'Health & Wellness',
-  'Toys & Games',
-  'Baby Products',
-  'Groceries',
-  'Automotive',
-  'Jewelry',
+  'Electronics',
+  'Fashion',
   'Watches',
-  'Bags & Luggage',
-  'Sports & Fitness',
+  'Home & Kitchen',
+  'Beauty',
+  'Sports',
+  'Books',
+  'Groceries',
+  'Jewelry',
+  'Automotive',
   'Pet Supplies',
+  'Toys & Games',
 ];
+
+const slugify = (text) =>
+  String(text || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 const FALLBACK_CATEGORIES = FALLBACK_CATEGORY_NAMES.map((name, index) => ({
   id: index + 1,
   name,
+  slug: slugify(name),
   description: `Explore premium ${name.toLowerCase()} deals curated for ShopEase shoppers.`,
   fallback: true,
 }));
@@ -96,15 +91,25 @@ export function ShopDataProvider({ children }) {
     }, {});
   }, [categories]);
 
+  const categoryBySlug = useMemo(() => {
+    return categories.reduce((accumulator, category) => {
+      if (category && category.slug) {
+        accumulator[String(category.slug)] = category;
+      }
+      return accumulator;
+    }, {});
+  }, [categories]);
+
   const value = useMemo(
     () => ({
       categories,
       categoryById,
+      categoryBySlug,
       isLoadingCategories,
       categoriesError,
       refreshCategories,
     }),
-    [categories, categoryById, isLoadingCategories, categoriesError, refreshCategories]
+    [categories, categoryById, categoryBySlug, isLoadingCategories, categoriesError, refreshCategories]
   );
 
   return <ShopDataContext.Provider value={value}>{children}</ShopDataContext.Provider>;

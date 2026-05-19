@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import TopNavbar from '../components/TopNavbar';
 import CategoryGrid from '../components/CategoryGrid';
@@ -14,6 +15,16 @@ import sportsImage from '../assets/sports.jpg';
 import blackImage from '../assets/black.jpg';
 
 function UserHome() {
+  useEffect(() => {
+    const savedScrollY = Number(sessionStorage.getItem('shopease_home_scrollY') || 0);
+
+    if (savedScrollY > 0) {
+      const restore = () => window.scrollTo(0, savedScrollY);
+      requestAnimationFrame(restore);
+      window.setTimeout(restore, 0);
+    }
+  }, []);
+
   return (
     <div className="se-dashboard-page">
       <TopNavbar />
@@ -56,7 +67,10 @@ function UserHome() {
           <div className="se-section-head se-pro-head">
             <div>
               <span className="se-pro-kicker">Discover</span>
-              <h2>Shop by Category</h2>
+              <h2 className="se-section-title">
+                <span className="se-title-decor" aria-hidden="true" />
+                Shop by Category
+              </h2>
               <p>Browse curated categories to find what you need faster and smarter.</p>
             </div>
             <Link to="/products" className="se-section-link">
@@ -70,7 +84,10 @@ function UserHome() {
           <div className="se-section-head se-pro-head">
             <div>
               <span className="se-pro-kicker">Exclusive Deals</span>
-              <h2>Shop Smart, Save More</h2>
+              <h2 className="se-section-title">
+                <span className="se-title-decor" aria-hidden="true" />
+                Shop Smart, Save More
+              </h2>
               <p>Explore handpicked offers and top promotions across trending categories.</p>
             </div>
           </div>
