@@ -1,15 +1,33 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: auth-service
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  mvc:
+    problemdetails:
+      enabled: true
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:../.env[.properties],optional:file:.env[.properties]"
   datasource:
     # Add your MySQL credentials here or set DB_URL, DB_USERNAME, and DB_PASSWORD as environment variables.
     url: jdbc:mysql://localhost:3306/shopease_auth?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root@39
     driver-class-name: com.mysql.cj.jdbc.Driver
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pavankurubar2002@gmail.com
+    password: mwmy vvfb hoxe xrxl
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,6 +37,34 @@ spring:
       hibernate:
         format_sql: true
 
+server:
+  port: 8082
+  error:
+    include-message: always
+    include-binding-errors: always
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
 app:
   cors:
     allowed-origin: ${CORS_ORIGIN:http://localhost:5173}
+  razorpay:
+    key-id: rzp_test_SlF1Q6bXcmNLqS
+    key-secret: 232T3ldCYzg8tkbc4ilv90gO
+    currency: ${RAZORPAY_CURRENCY:INR}
+    payment-capture: ${RAZORPAY_PAYMENT_CAPTURE:true}
+    trust-all-ssl: ${RAZORPAY_TRUST_ALL_SSL:false}

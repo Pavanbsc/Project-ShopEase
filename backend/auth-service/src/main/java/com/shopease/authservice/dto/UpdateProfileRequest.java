@@ -19,6 +19,9 @@ public record UpdateProfileRequest(
         @Size(max = 1000, message = "Address is too long")
         String address,
 
+        @Size(max = 8000000, message = "Profile image data is too large")
+        String profileImage,
+
         List<AddressDto> addresses
 ) {
 }

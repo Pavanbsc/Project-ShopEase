@@ -32,11 +32,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
+    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -47,9 +49,23 @@ public class AuthService {
                         "User not found. Please sign up first."
                 ));
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        String storedPassword = user.getPasswordHash();
+        boolean passwordMatches = passwordEncoder.matches(request.password(), storedPassword);
+
+        // Backward compatibility for users created before passwords were hashed.
+        // If the stored value is still plain text, allow login once and upgrade it.
+        if (!passwordMatches && storedPassword != null && storedPassword.equals(request.password())) {
+            user.setPasswordHash(passwordEncoder.encode(request.password()));
+            userRepository.save(user);
+            passwordMatches = true;
+        }
+
+        if (!passwordMatches) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password. Please try again.");
         }
+
+        // Send login notification email
+        emailService.sendLoginNotification(user.getEmail(), user.getName());
 
         return buildResponse(user, "Login successful");
     }
@@ -77,6 +93,7 @@ public class AuthService {
         user.setRole(parseRole(request.role()));
 
         UserEntity savedUser = userRepository.save(user);
+        emailService.sendRegistrationConfirmation(savedUser.getEmail(), savedUser.getName());
         return buildResponse(savedUser, "Registration successful");
     }
 
@@ -84,6 +101,16 @@ public class AuthService {
     public UserProfileDto getProfile(Long userId) {
         UserEntity user = getUserById(userId);
         return toUserProfileDto(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDto> listAllUsers() {
+        return userRepository.findAll().stream().map(u -> new UserDto(
+                u.getId(),
+                u.getName(),
+                u.getEmail(),
+                u.getRole().name()
+        )).toList();
     }
 
     @Transactional
@@ -97,6 +124,7 @@ public class AuthService {
         user.setPhone(cleanText(request.phone()));
         user.setGender(cleanText(request.gender()));
         user.setAddress(cleanText(request.address()));
+        user.setProfileImage(cleanText(request.profileImage()));
         user.setDateOfBirth(parseDate(request.dateOfBirth()));
         user.setAddressesJson(writeAddresses(request.addresses()));
 
@@ -131,6 +159,7 @@ public class AuthService {
                 user.getDateOfBirth() != null ? user.getDateOfBirth().toString() : null,
                 user.getGender(),
                 user.getAddress(),
+                user.getProfileImage(),
                 readAddresses(user.getAddressesJson())
         );
     }

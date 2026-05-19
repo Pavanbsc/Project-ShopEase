@@ -56,6 +56,10 @@ public class UserEntity {
     @Column(name = "addresses_json", columnDefinition = "TEXT")
     private String addressesJson;
 
+    @Lob
+    @Column(name = "profile_image", columnDefinition = "LONGTEXT")
+    private String profileImage;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -152,6 +156,14 @@ public class UserEntity {
 
     public void setAddressesJson(String addressesJson) {
         this.addressesJson = addressesJson;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     public LocalDateTime getCreatedAt() {

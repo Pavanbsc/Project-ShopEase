@@ -6,6 +6,8 @@ public record AddressDto(
         String city,
         String state,
         String pincode,
-        String phone
+        String phone,
+        String alternatePhone,
+        String landmark
 ) {
 }

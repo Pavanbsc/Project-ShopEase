@@ -11,6 +11,7 @@ public record UserProfileDto(
         String dateOfBirth,
         String gender,
         String address,
+        String profileImage,
         List<AddressDto> addresses
 ) {
 }
