@@ -13,7 +13,7 @@ ShopEase now includes a dynamic, backend-driven category and product discovery s
 - Backend alignment for Spring Boot + MySQL using DTO-based REST contract
 
 ## Frontend Structure
-- `src/components/AuthForm.jsx`
+- `src/components/AuthForm.jsx` 
 - `src/components/CategoryNav.jsx`
 - `src/components/CategoryCard.jsx`
 - `src/components/ProductGrid.jsx`
